@@ -1,0 +1,255 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v5.json",
+  "description": "Area charts with an interactive overview and filtered detail views.",
+  "width": 820,
+  "height": 540,
+  "autosize": {
+    "type": "fit",
+    "contains": "padding"
+  },
+
+  "data": [
+    {
+      "name": "Data",
+      "values": [
+      {"x": 0, "y": 28, "c":0}, {"x": 0.5, "y": 20, "c":1},{"x": 3.4, "y": 80, "c":2},
+      {"x": 1.1, "y": 43, "c":0}, {"x": 1, "y": 35, "c":1},{"x": 4.7, "y": 30, "c":2},
+      {"x": 2.1, "y": 81, "c":0}, {"x": 2.2, "y": 10, "c":1},{"x": 4, "y": 20, "c":2},
+      {"x": 3.2, "y": 19, "c":0}, {"x": 3, "y": 15, "c":1},
+      {"x": 4.5, "y": 52, "c":0}, {"x": 4.7, "y": 48, "c":1},
+      {"x": 5.9, "y": 24, "c":0}, {"x": 5, "y": 28, "c":1},
+      {"x": 8.6, "y": 87, "c":0}, {"x": 3.6, "y": 66, "c":1},
+      {"x": 1.7, "y": 17, "c":0}, {"x": 7.0, "y": 27, "c":1},
+      {"x": 8.3, "y": 68, "c":0}, {"x": 4.4, "y": 16, "c":1},
+      {"x": 9, "y": 49, "c":0}, {"x": 3.9, "y": 25, "c":1}
+    ]
+    },
+    {
+      "name": "zeroLine",
+      "values": [
+        {"x": 0, "y": 0},
+        {"x": 500, "y": 0}
+      ]
+    }
+    ,
+    {
+      "name": "data_1",
+      "source": "Data",
+      "transform": [{"type": "filter", "expr": "datum.c == 0"}]
+    },
+    {
+      "name": "chartData",
+      "source": "Data",
+      "transform": [{"type": "filter", "expr": "datum.c > 0"}]
+    }
+  ],
+
+  "signals": [
+    {
+    "name": "unit",
+    "value": {},
+    "on": [
+        {"events": "mousemove", "update": "isTuple(group()) ? group() : unit"}
+      ]
+    },
+    {
+      "name": "graphSize",
+      "value": [160,690]
+    },
+    {
+      "name": "xAxis",
+      "value": "x"
+    },
+    {
+      "name": "yAxis",
+      "value": "y"
+    }
+    ,
+    {
+     "name": "classification",
+     "value" : "c"
+    },
+    {
+      "name": "minX",
+      "value" : 0
+    },
+    {
+      "name": "minY",
+      "value" : 0
+    },
+    {
+      "name": "maxX",
+      "value" : 10
+    },
+    {
+      "name": "maxY",
+      "value" : 100
+    },
+    {
+  "name": "tooltip",
+  "value": {},
+  "on": [
+     {"events": "mouseover", "update": "datum ? datum : {}"},
+     {"events": "mouseout", "update": "{}"}
+  ]
+  },
+  {
+    "name": "highlight",
+    "value": {},
+    "on": [
+      {"events": "click", "update": "datum && datum.c != -100? datum : {}"}
+    ]
+  },
+  {
+    "name": "colorID",
+    "value": {},
+    "on": [
+       {"events": "symbol:click", "update": "item()? item() : {}"}
+    ]
+  },
+  {
+    "name": "highlightColorArray",
+    "value": [{}, {}], 
+    "on": [
+      {
+        "events": "click",
+        "update": "[datum && datum.c != -100 ? datum : {}, highlightColorArray[1]]"
+      },
+      {
+        "events": "symbol:click",
+        "update": "[highlightColorArray[0], item()? item() : {}]"
+      }
+    ]
+  }
+  ],
+
+  "marks": [
+    {
+      "type": "group",
+      "name": "detail",
+      "encode": {
+        "enter": {
+          "height": {"signal": "graphSize[0]*0.76"},
+          "width": {"signal": "graphSize[1]"}
+        }
+      },
+      "scales": [
+        {
+          "name": "xDetail",
+          "type": "linear",
+          "range": [0,{"signal": "graphSize[1]"}],
+          "domain": [{"signal": "minX"},{"signal": "maxX"}]
+        },
+        {
+          "name": "yDetail",
+          "type": "linear",
+          "range": [{"signal": "graphSize[0]*0.76"}, 0],
+          "domain": [{"signal": "minY"},{"signal": "maxY"}],
+          "nice": true, "zero": true
+        },           
+        {
+          "name": "color",
+          "type": "ordinal",
+          "domain": {"data": "chartData", "field": {"signal": "classification"}, "sort": true},
+          "range": "category"
+        },
+        {
+          "name": "strokeDash",
+          "type": "ordinal",
+          "domain": {"data": "data_1", "field": "c"},
+          "range": [[4, 2]]
+        }
+      ],
+      "axes": [
+        {"orient": "left", "scale": "yDetail"}
+      ],
+      "marks": [
+        {
+          "type": "group",
+          "from": {
+            "facet": {
+              "name": "series",
+              "data": "chartData",
+              "groupby": "Origin"
+            }
+          },
+          "encode": {
+            "enter": {
+              "height": {"signal": "graphSize[0]*0.76"},
+              "width": {"signal": "graphSize[1]"},
+              "clip": {"value": true}
+            }
+          },
+          "marks": [
+            {
+              "type": "symbol",
+              "from": {"data": "series"},
+              "style": ["point"],
+              "encode": {
+                "update": {
+                  "stroke": {"scale": "color", "field": {"signal": "classification"}},
+                  "x": {"scale": "xDetail", "field": {"signal": "xAxis"}},
+                  "y": {"scale": "yDetail", "field": {"signal": "yAxis"}},
+                   "strokeWidth": {"signal": "datum.c == highlight.c || datum.c == tooltip.c ? '5' : '2'"}
+                }
+              }
+            },
+            {
+               "name": "layer_0_marks",
+                "type": "line",
+                "style": ["line"],
+                "sort": {"field": "datum[\"x\"]"},
+                "from": {"data": "data_1"},
+                "encode": {
+                  "update": {
+                    "stroke": {"value": "#4c78a8"},
+                    "strokeDash": {"scale": "strokeDash", "field": "c"},
+                    "x": {"scale": "xDetail", "field": {"signal": "xAxis"}},
+                    "y": {"scale": "yDetail", "field": {"signal": "yAxis"}}
+                  },
+                  "hover": {
+                    "tooltip": {
+                      "signal": "{'Streamline Index': datum.c}"
+                    }
+                  }
+                }
+            },
+            {
+              "type": "line",
+              "from": {"data": "zeroLine"},
+              "encode": {
+                "update": {
+                  "stroke": {"value": "black"},
+                  "strokeWidth": {"value" : 0.5},
+                  "x": {"scale": "xDetail", "field": "x"},
+                  "y": {"scale": "yDetail", "field": "y"}
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "legends": [
+      {
+        "stroke": "color",
+        "symbolType": "circle",
+        "orient": "none",
+        "legendX": {"signal": "graphSize[1]+12"},
+        "legendY": 0,
+        "gradientLength": 20,
+        "encode": {
+          "symbols": {
+            "update": {
+              "fill": {"value": "transparent"},
+              "opacity": {"value": 1}
+            }
+          }
+        }
+      }
+      ]
+    }
+
+
+  ]
+
+}

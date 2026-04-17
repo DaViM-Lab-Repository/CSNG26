@@ -1,0 +1,26 @@
+.matrix-container {
+  display: inline-grid;
+  width: 300px;
+  height: 300px;
+  overflow: auto;
+  gap: 0;
+}
+
+.cell {
+  width: 40px;
+  height: 40px;
+  border: none;
+  user-select: none;
+  background-color:antiquewhite;
+}
+
+.cell.selected {
+  background-color: rgba(0, 128, 0, 0.5)!important;
+}
+.matrix-container > .cell:nth-child(odd) {
+  background-color: rgba(135, 206, 250, 0.5); /* Light blue */
+}
+
+.cell.black {
+  background-color: black;
+}
